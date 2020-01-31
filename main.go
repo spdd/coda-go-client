@@ -90,5 +90,4 @@ func main() {
 	log.Println(ds.DaemonStatus.BlockchainLength)
 	log.Println(ds.DaemonStatus.Peers)
 	log.Println(ds.DaemonStatus.SnarkWorker)
-
 }

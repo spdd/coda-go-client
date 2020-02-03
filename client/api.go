@@ -3,7 +3,6 @@ package coda
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,7 +12,8 @@ import (
 	"github.com/spdd/coda-go-client/client/types"
 )
 
-var graphql_endpoint = "https://graphql.o1test.net/graphql"
+var graphqlEndpoint = "https://graphql.o1test.net/graphql"
+var websocketEndpoint = "ws://graphql.o1test.net/graphql"
 
 //var graphql_endpoint = "http://localhost:3085/graphql"
 
@@ -47,7 +47,6 @@ func (c *Client) makeRequest(url string, query string) (string, error) {
 	})
 	request, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
 	request.Header.Set("Content-Type", "application/json")
-	fmt.Println(request)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -65,15 +64,34 @@ func (c *Client) makeRequest(url string, query string) (string, error) {
 }
 
 // Coda API
-// GetDeamonStatus
-func (c *Client) GetDeamonStatus() (*types.DaemonStatusResult, error) {
-	response, err := c.makeRequest(graphql_endpoint, types.DaemonStatusQuery)
+// GetDaemonStatus
+func (c *Client) GetDaemonStatus() (*types.DaemonStatusResult, error) {
+	response, err := c.makeRequest(graphqlEndpoint, types.DaemonStatusQuery)
 	if err != nil {
 		return nil, err
 	}
 	var ds types.DaemonStatusResult
 	response = removeFromJsonString(response)
 	//log.Println(string(response))
+	r := bytes.NewReader([]byte(response))
+	err2 := json.NewDecoder(r).Decode(&ds)
+	if err2 != nil {
+		log.Fatalln(err2)
+	}
+	if err2 != nil {
+		return nil, err2
+	}
+	return &ds, nil
+}
+
+// GetDaemonVersion
+func (c *Client) GetDaemonVersion() (*types.DaemonVersionResult, error) {
+	response, err := c.makeRequest(graphqlEndpoint, types.DaemonVersionQuery)
+	if err != nil {
+		return nil, err
+	}
+	var ds types.DaemonVersionResult
+	response = removeFromJsonString(response)
 	r := bytes.NewReader([]byte(response))
 	err2 := json.NewDecoder(r).Decode(&ds)
 	if err2 != nil {

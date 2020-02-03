@@ -82,7 +82,7 @@ var response = `
 
 func main() {
 	codaClient := coda.NewClient()
-	ds, err := codaClient.GetDeamonStatus()
+	ds, err := codaClient.GetDaemonStatus()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -90,4 +90,11 @@ func main() {
 	log.Println(ds.DaemonStatus.BlockchainLength)
 	log.Println(ds.DaemonStatus.Peers)
 	log.Println(ds.DaemonStatus.SnarkWorker)
+
+	v, err := codaClient.GetDaemonVersion()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(v.Version)
+
 }

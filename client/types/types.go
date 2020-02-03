@@ -1,5 +1,14 @@
 package types
 
+type QueryResult interface {
+	PrintResult()
+}
+
+type Query interface {
+	PrintQuery()
+}
+
+// Daemon Status
 var DaemonStatusQuery = `
 	query {
 		daemonStatus {
@@ -37,6 +46,9 @@ type DaemonStatusResult struct {
 	DaemonStatus DaemonStatusObj `json:"daemonStatus"`
 }
 
+func (ds DaemonStatusResult) PrintResult() {
+}
+
 type DaemonStatusObj struct {
 	NumAccounts                int32            `json:"numAccounts"`
 	BlockchainLength           int32            `json:"blockchainLength"`
@@ -54,4 +66,15 @@ type DaemonStatusObj struct {
 	ConsensusMechanism         string           `json:"consensusMechanism"`
 	ConfDir                    string           `json:"confDir"`
 	ConsensusConfiguration     map[string]int32 `json:"consensusConfiguration"`
+}
+
+// Daemon Version
+var DaemonVersionQuery = `
+	{
+		version
+	}
+`
+
+type DaemonVersionResult struct {
+	Version string `json:"version"`
 }

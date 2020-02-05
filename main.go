@@ -4,6 +4,7 @@ import (
 	"log"
 
 	coda "github.com/spdd/coda-go-client/client"
+	"github.com/spdd/coda-go-client/client/types"
 )
 
 var response = `
@@ -81,7 +82,8 @@ var response = `
 `
 
 func main() {
-	codaClient := coda.NewClient()
+	wsCh := make(chan types.NewBlockSubscribeResponse)
+	codaClient := coda.NewClient(wsCh)
 	ds, err := codaClient.GetDaemonStatus()
 	if err != nil {
 		log.Fatalln(err)
@@ -95,6 +97,27 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Println(v.Version)
+	log.Println("Version:", v.Version)
 
+	ur, err := codaClient.GetDaemonStatus()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println("Universal Status:", ur.DaemonStatus.BlockchainLength)
+
+	ur2, err := codaClient.GetDaemonVersion()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println("Universal Version:", ur2.Version)
+
+	log.Println("SubscribeNewBlock before")
+	go codaClient.SubscribeNewBlock("ws://192.168.100.100:3085/graphql", types.NewBlockSubscription)
+	log.Println("SubscribeNewBlock after")
+	for {
+		select {
+		case r := <-wsCh:
+			log.Println("NewBlock:", r.Type)
+		}
+	}
 }

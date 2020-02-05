@@ -1,11 +1,14 @@
 package types
 
-type QueryResult interface {
-	PrintResult()
+type HelloSend struct {
+	Type    string         `json:"type"`
+	Payload map[string]int `json:"payload"`
 }
 
-type Query interface {
-	PrintQuery()
+type HelloReceive struct {
+	Type    string         `json:"type"`
+	Id      string         `json:"id"`
+	Payload map[string]int `json:"payload"`
 }
 
 // Daemon Status
@@ -77,4 +80,109 @@ var DaemonVersionQuery = `
 
 type DaemonVersionResult struct {
 	Version string `json:"version"`
+}
+
+type UniversalHttpResult struct {
+	DaemonStatusResult
+	DaemonVersionResult
+}
+
+// New Block Subscription
+
+var NewBlockSubscription = `
+	subscription(){
+		newBlock(){
+		creator
+		stateHash
+		protocolState {
+			previousStateHash
+			blockchainState {
+			date
+			snarkedLedgerHash
+			stagedLedgerHash
+			}
+		},
+		transactions {
+			userCommands {
+			id
+			isDelegation
+			nonce
+			from
+			to
+			amount
+			fee
+			memo
+			}
+			feeTransfer {
+			recipient
+			fee
+			}
+			coinbase
+		}
+		}
+	}
+`
+
+type NewBlockSubscribeQuery struct {
+	Type    string        `json:"type"`
+	Id      string        `json:"id"`
+	Payload NewBlockQuery `json:"payload"`
+}
+
+type NewBlockQuery struct {
+	Query string `json:"query"`
+}
+
+type NewBlockSubscribeResponse struct {
+	Type    string       `json:"type"`
+	Id      string       `json:"id"`
+	Payload NewBlockData `json:"payload"`
+}
+
+type NewBlockData struct {
+	Data NewBlock `json:"data"`
+}
+
+type NewBlock struct {
+	Block InsideBlockObj `json:"newBlock"`
+}
+
+type InsideBlockObj struct {
+	Creator       string           `json:"creator"`
+	StateHash     string           `json:"stateHash"`
+	ProtocolState ProtocolStateObj `json:"protocolState"`
+	Transactions  TransactionsObj  `json:"transactions"`
+}
+
+type ProtocolStateObj struct {
+	PreviousStateHash string             `json:"previousStateHash"`
+	BlockchainState   BlockchainStateObj `json:"blockchainState"`
+}
+
+type TransactionsObj struct {
+	UserCommands []UserCommandsObj `json:"userCommands"`
+	FeeTransfer  []FeeTransferObj  `json:"feeTransfer"`
+	Coinbase     string            `json:"coinbase"`
+}
+
+type UserCommandsObj struct {
+	Id           string `json:"id"`
+	IsDelegation bool   `json:"isDelegation"`
+	Nonce        int    `json:"nonce"`
+	From         string `json:"from"`
+	To           string `json:"to"`
+	Amount       string `json:"amount"`
+	Fee          string `json:"fee"`
+	Memo         string `json:"memo"`
+}
+
+type FeeTransferObj struct {
+	Recipient string `json:"recipient"`
+	Fee       string `json:"fee"`
+}
+
+type BlockchainStateObj struct {
+	Date              string `json:"date"`
+	SnarkedLedgerHash string `json:"snarkedLedgerHash"`
+	StagedLedgerHash  string `json:"stagedLedgerHash"`
 }

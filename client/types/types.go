@@ -1,5 +1,31 @@
 package types
 
+// Coda types
+
+type ResponseData struct {
+	Host string
+	Type string
+	Data *SubscriptionResponse
+}
+
+type Event struct {
+	Response    chan *ResponseData
+	Type        string
+	Query       string
+	Unsubscribe <-chan bool
+	Subscribed  bool
+	Count       int32
+}
+
+type Events struct {
+	NewBlock          *Event
+	SyncUpdate        *Event
+	BlockConfirmation *Event
+}
+
+// Coda Api objects
+// Daemon Status
+
 type HelloSend struct {
 	Type    string         `json:"type"`
 	Payload map[string]int `json:"payload"`
@@ -10,40 +36,6 @@ type HelloReceive struct {
 	Id      string         `json:"id"`
 	Payload map[string]int `json:"payload"`
 }
-
-// Daemon Status
-var DaemonStatusQuery = `
-	query {
-		daemonStatus {
-		numAccounts
-		blockchainLength
-		highestBlockLengthReceived
-		uptimeSecs
-		ledgerMerkleRoot
-		stateHash
-		commitId
-		peers
-		userCommandsSent
-		snarkWorker
-		snarkWorkFee
-		syncStatus
-		proposePubkeys
-		consensusMechanism
-		confDir
-		commitId
-		consensusConfiguration {
-			delta
-			k
-			c
-			cTimesK
-			slotsPerEpoch
-			slotDuration
-			epochDuration
-			acceptableNetworkDelay
-		}
-		}
-	}
-  `
 
 type DaemonStatusResult struct {
 	DaemonStatus DaemonStatusObj `json:"daemonStatus"`
@@ -64,7 +56,7 @@ type DaemonStatusObj struct {
 	UserCommandsSent           int32            `json:"userCommandsSent"`
 	SnarkWorker                int32            `json:"snarkWorker"`
 	SnarkWorkFee               int32            `json:"snarkWorkFee"`
-	SyncStatus                 string           `json:"syncStatus "`
+	SyncStatus                 string           `json:"syncStatus"`
 	ProposePubkeys             []string         `json:"proposePubkeys"`
 	ConsensusMechanism         string           `json:"consensusMechanism"`
 	ConfDir                    string           `json:"confDir"`
@@ -72,11 +64,6 @@ type DaemonStatusObj struct {
 }
 
 // Daemon Version
-var DaemonVersionQuery = `
-	{
-		version
-	}
-`
 
 type DaemonVersionResult struct {
 	Version string `json:"version"`
@@ -89,51 +76,25 @@ type UniversalHttpResult struct {
 
 // New Block Subscription
 
-var NewBlockSubscription = `
-	subscription(){
-		newBlock(){
-		creator
-		stateHash
-		protocolState {
-			previousStateHash
-			blockchainState {
-			date
-			snarkedLedgerHash
-			stagedLedgerHash
-			}
-		},
-		transactions {
-			userCommands {
-			id
-			isDelegation
-			nonce
-			from
-			to
-			amount
-			fee
-			memo
-			}
-			feeTransfer {
-			recipient
-			fee
-			}
-			coinbase
-		}
-		}
-	}
-`
-
-type NewBlockSubscribeQuery struct {
-	Type    string        `json:"type"`
-	Id      string        `json:"id"`
-	Payload NewBlockQuery `json:"payload"`
+type SubscribeData struct {
+	Type    string         `json:"type"`
+	Id      string         `json:"id"`
+	Payload SubscribeQuery `json:"payload"`
 }
 
-type NewBlockQuery struct {
+type SubscribeQuery struct {
 	Query string `json:"query"`
 }
 
-type NewBlockSubscribeResponse struct {
+type SubscriptionResponse struct {
+	NewBlockSubscriptionResponse
+	SyncUpdateSubscriptionResponse
+}
+
+type SyncUpdateSubscriptionResponse struct {
+}
+
+type NewBlockSubscriptionResponse struct {
 	Type    string       `json:"type"`
 	Id      string       `json:"id"`
 	Payload NewBlockData `json:"payload"`
@@ -186,3 +147,7 @@ type BlockchainStateObj struct {
 	SnarkedLedgerHash string `json:"snarkedLedgerHash"`
 	StagedLedgerHash  string `json:"stagedLedgerHash"`
 }
+
+// Sync Update Subscription
+
+// Block Confirmation Subscription

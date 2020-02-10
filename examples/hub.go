@@ -6,6 +6,7 @@ import (
 	coda "github.com/spdd/coda-go-client/client"
 )
 
+// Not tested
 func main() {
 	events := []string{
 		"NewBlock",

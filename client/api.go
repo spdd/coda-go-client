@@ -59,7 +59,6 @@ func NewClient(endpoint string, hub *Hub, eventsIt []string) *Client {
 	subEvents := make(map[string]*types.Event)
 	for _, item := range eventsIt {
 		event := createEvent(item)
-		//log.Printf("Event: %v", event)
 		subEvents[item] = event
 	}
 	return &Client{
@@ -120,7 +119,7 @@ func (c *Client) getUniversalCh(query string) <-chan *types.UniversalHttpResult 
 		}
 		var ds types.UniversalHttpResult
 		response = removeFromJsonString(response)
-		log.Println("Result Universal2:", response)
+		//log.Println("Result Universal2:", response)
 		r := bytes.NewReader([]byte(response))
 		err2 := json.NewDecoder(r).Decode(&ds)
 		if err2 != nil {
@@ -128,6 +127,7 @@ func (c *Client) getUniversalCh(query string) <-chan *types.UniversalHttpResult 
 			ch <- nil
 		}
 		ch <- &ds
+		close(ch)
 	}()
 	return ch
 }
@@ -140,7 +140,7 @@ func (c *Client) getUniversal(query string) (*types.UniversalHttpResult, error) 
 	}
 	var ds types.UniversalHttpResult
 	response = removeFromJsonString(response)
-	log.Println("Result Universal:", response)
+	//log.Println("Result Universal:", response)
 	r := bytes.NewReader([]byte(response))
 	err2 := json.NewDecoder(r).Decode(&ds)
 	if err2 != nil {
@@ -150,6 +150,7 @@ func (c *Client) getUniversal(query string) (*types.UniversalHttpResult, error) 
 	return &ds, nil
 }
 
+// Not tested
 func (c *Client) getUniversalRepeat(query string) {
 	for {
 		select {
@@ -184,6 +185,9 @@ func (c *Client) subscribe(event *types.Event) {
 		return
 	}
 	for {
+		defer func() {
+			log.Println("Exit Subscribtion: ", event.Type)
+		}()
 		select {
 		default:
 			event.Subscribed = true
@@ -196,9 +200,9 @@ func (c *Client) subscribe(event *types.Event) {
 			conn, err := websocket.Dial(url, "", origin)
 			if err != nil {
 				log.Println("dial:", err)
-				log.Printf("Trying to connect to %s after %v seconds", url, 60)
-				time.Sleep(60 * time.Second)
-				continue
+				//log.Printf("Trying to connect to %s after %v seconds", url, 60)
+				//time.Sleep(60 * time.Second)
+				//continue
 			}
 
 			defer conn.Close()
@@ -221,13 +225,13 @@ func (c *Client) subscribe(event *types.Event) {
 			// receive message
 			// messageType initializes some type of message
 			err3 := websocket.JSON.Receive(conn, &m)
-			conn.Close()
-			log.Println("Receive type:", m.Type)
-			s3, _ := json.Marshal(m)
 			if err3 != nil {
 				log.Println("Error Receive", err3)
 			}
-			log.Printf("recv: %s", string(s3))
+			conn.Close()
+			log.Println("Receive type:", m.Type)
+			//s3, _ := json.Marshal(m)
+			//log.Printf("recv: %s", string(s3))
 			responseData := &types.ResponseData{
 				Host: c.Endpoint,
 				Type: event.Type,

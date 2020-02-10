@@ -2,8 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
-	"os/signal"
 
 	coda "github.com/spdd/coda-go-client/client"
 )
@@ -11,12 +9,12 @@ import (
 func main() {
 
 	hub := coda.NewHub()
-	codaClient := coda.NewClient("http://192.168.100.100:3085/graphql", hub, nil)
-	codaClient2 := coda.NewClient("http://graphql.o1test.net/graphql", hub, nil)
+	client1 := coda.NewClient("http://192.168.100.100:3085/graphql", hub, nil)
+	client2 := coda.NewClient("http://graphql.o1test.net/graphql", hub, nil)
 
-	go codaClient.SubscribeForNewBlocks()
-	go codaClient.SubscribeForSyncUpdates()
-	go codaClient2.SubscribeForNewBlocks()
+	go client1.SubscribeForNewBlocks()
+	go client1.SubscribeForSyncUpdates()
+	go client2.SubscribeForNewBlocks()
 
 	blockCount := 0
 	for {
@@ -32,13 +30,13 @@ func main() {
 				if blockCount == 2 {
 					if r.Host == "http://192.168.100.100:3085/graphql" {
 						//hub.Unsubscribe <- codaClient
-						codaClient.SubscriptionEvents["NewBlock"].Unsubscribe <- true
+						client1.SubscriptionEvents["NewBlock"].Unsubscribe <- true
 						return
 					}
 				}
 				if blockCount == 1 {
 					if r.Host == "http://graphql.o1test.net/graphql" {
-						codaClient2.SubscriptionEvents["NewBlock"].Unsubscribe <- true
+						client2.SubscriptionEvents["NewBlock"].Unsubscribe <- true
 					}
 				}
 				blockCount += 1
@@ -47,13 +45,9 @@ func main() {
 				log.Println("syncUpdate Arrived")
 				if r.Host == "http://192.168.100.100:3085/graphql" {
 					//hub.Unsubscribe <- codaClient
-					codaClient.SubscriptionEvents["SyncUpdate"].Unsubscribe <- true
+					client1.SubscriptionEvents["SyncUpdate"].Unsubscribe <- true
 				}
 			}
 		}
 	}
-
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt)
-	<-ch
 }

@@ -7,9 +7,13 @@ import (
 	coda "github.com/spdd/coda-go-client/client"
 )
 
+var (
+	endpoint = "http://192.168.100.100:3085/graphql"
+)
+
 func TestGetDaemonStatus(t *testing.T) {
-	codaClient := coda.NewClient()
-	ds, err := codaClient.GetDaemonStatus()
+	client := coda.NewClient(endpoint, nil, nil)
+	ds, err := client.GetDaemonStatus()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -19,12 +23,12 @@ func TestGetDaemonStatus(t *testing.T) {
 }
 
 func TestGetDaemonVersion(t *testing.T) {
-	codaClient := coda.NewClient()
+	codaClient := coda.NewClient(endpoint, nil, nil)
 	ds, err := codaClient.GetDaemonVersion()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if ds.Version != "99d1e1f7a03be70f22d1a56acf38d2dd262b0d88" {
-		t.Errorf("%v not %v", ds.Version, "99d1e1f7a03be70f22d1a56acf38d2dd262b0d88")
+	if ds.Version != "911631273ee694596407d1a181064ca6174cd8a3" {
+		t.Errorf("%v not %v", ds.Version, "911631273ee694596407d1a181064ca6174cd8a3")
 	}
 }

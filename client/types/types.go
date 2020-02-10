@@ -12,15 +12,9 @@ type Event struct {
 	Response    chan *ResponseData
 	Type        string
 	Query       string
-	Unsubscribe <-chan bool
+	Unsubscribe chan bool
 	Subscribed  bool
 	Count       int32
-}
-
-type Events struct {
-	NewBlock          *Event
-	SyncUpdate        *Event
-	BlockConfirmation *Event
 }
 
 // Coda Api objects
@@ -39,9 +33,6 @@ type HelloReceive struct {
 
 type DaemonStatusResult struct {
 	DaemonStatus DaemonStatusObj `json:"daemonStatus"`
-}
-
-func (ds DaemonStatusResult) PrintResult() {
 }
 
 type DaemonStatusObj struct {

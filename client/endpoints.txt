@@ -1,1 +1,0 @@
-http://graphql.o1test.net/graphql

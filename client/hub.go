@@ -51,7 +51,7 @@ func (h *Hub) Run() {
 			if client.Endpoint == "http://graphql.o1test.net/graphql" {
 				continue
 			}
-			go client.GetDaemonStatusRepeat()
+			//go client.GetDaemonStatusRepeat()
 			//time.Sleep(5 * time.Second)
 		case s := <-h.Status:
 			client := s.Client

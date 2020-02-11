@@ -13,9 +13,20 @@ Simple API Client for [Coda](https://codaprotocol.com/) GraphQL API written in G
 | :---------------------------------:   | :----:  | :------: | :----------------------------: |
 |        Get daemon status              |  :ok:   |   :ok:   |         GetDaemonStatus        |
 |        Get daemon version             |  :ok:   |   :ok:   |         GetDaemonVersion       |
+|        Get wallets                    |  :ok:   |   :ok:   |         GetWallets             |
+|        Get wallet                     |  :ok:   |   :ok:   |         GetWallet(pk)          |
+|        Unlock wallet                  |  :ok:   |   :ok:   |         UnlockWallet(pk, ps)   |
+|        Create wallet                  |  :ok:   |   :ok:   |         CreateWallet(ps)       |
+|        Send payment                   |  :ok:   |   :ok:   |         SendPayment(r,s,a,f,m) |
+|        get_pooled_payments            |  :ok:   |   :ok:   |         -                      |
+|        get_transaction_status         |  :ok:   |   :ok:   |         -                      |
+|        set_current_snark_worker       |  :ok:   |   :ok:   |         -                      |
+|        get_current_snark_worker       |  :ok:   |   :ok:   |         -                      |
+|        get_sync_status                |  :ok:   |   :ok:   |         -                      |
+|        get_blocks                     |  :ok:   |   :ok:   |         -                      |
 |      Subscription for new blocks      |  :ok:   |   :ok:   |      SubscribeForNewBlocks     |
-| Subscription for Network Sync Updates |  :ok:   |   :x:    |     SubscribeForSyncUpdates    |
-| Subscription for Block Confirmations  |  :ok:   |   :x:    | SubscribeForBlockConfirmations |
+| Subscription for Network Sync Updates |  :ok:   |   :ok:   |     SubscribeForSyncUpdates    |
+| Subscription for Block Confirmations  |  :x:    |   :x:    | SubscribeForBlockConfirmations |
 
 # Installation 
 

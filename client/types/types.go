@@ -32,26 +32,24 @@ type HelloReceive struct {
 }
 
 type DaemonStatusResult struct {
-	DaemonStatus DaemonStatusObj `json:"daemonStatus"`
-}
-
-type DaemonStatusObj struct {
-	NumAccounts                int32            `json:"numAccounts"`
-	BlockchainLength           int32            `json:"blockchainLength"`
-	HighestBlockLengthReceived int32            `json:"highestBlockLengthReceived"`
-	UptimeSecs                 int32            `json:"uptimeSecs"`
-	LedgerMerkleRoot           string           `json:"ledgerMerkleRoot"`
-	StateHash                  string           `json:"stateHash"`
-	CommitId                   string           `json:"commitId"`
-	Peers                      []string         `json:"peers"`
-	UserCommandsSent           int32            `json:"userCommandsSent"`
-	SnarkWorker                int32            `json:"snarkWorker"`
-	SnarkWorkFee               int32            `json:"snarkWorkFee"`
-	SyncStatus                 string           `json:"syncStatus"`
-	ProposePubkeys             []string         `json:"proposePubkeys"`
-	ConsensusMechanism         string           `json:"consensusMechanism"`
-	ConfDir                    string           `json:"confDir"`
-	ConsensusConfiguration     map[string]int32 `json:"consensusConfiguration"`
+	DaemonStatus struct {
+		NumAccounts                int32            `json:"numAccounts"`
+		BlockchainLength           int32            `json:"blockchainLength"`
+		HighestBlockLengthReceived int32            `json:"highestBlockLengthReceived"`
+		UptimeSecs                 int32            `json:"uptimeSecs"`
+		LedgerMerkleRoot           string           `json:"ledgerMerkleRoot"`
+		StateHash                  string           `json:"stateHash"`
+		CommitId                   string           `json:"commitId"`
+		Peers                      []string         `json:"peers"`
+		UserCommandsSent           int32            `json:"userCommandsSent"`
+		SnarkWorker                int32            `json:"snarkWorker"`
+		SnarkWorkFee               int32            `json:"snarkWorkFee"`
+		SyncStatus                 string           `json:"syncStatus"`
+		ProposePubkeys             []string         `json:"proposePubkeys"`
+		ConsensusMechanism         string           `json:"consensusMechanism"`
+		ConfDir                    string           `json:"confDir"`
+		ConsensusConfiguration     map[string]int32 `json:"consensusConfiguration"`
+	} `json:"daemonStatus"`
 }
 
 // Daemon Version
@@ -60,14 +58,80 @@ type DaemonVersionResult struct {
 	Version string `json:"version"`
 }
 
+// Get Wallets
+
+type GetWalletsResult struct {
+	OwnedWallets []Wallet `json:"ownedWallets"`
+}
+
+type GetWalletResult struct {
+	Wallet Wallet `json:"wallet"`
+}
+
+type Wallet struct {
+	PublicKey string `json:"publicKey"`
+	Balance   struct {
+		Total   string `json:"total"`
+		Unknown string `json:"unknown"`
+	} `json:"balance"`
+	Nonce            string `json:"nonce"`
+	ReceiptChainHash string `json:"receiptChainHash"`
+	Delegate         string `json:"delegate"`
+	VotingFor        string `json:"votingFor"`
+	StakingActive    bool   `json:"stakingActive"`
+	PrivateKeyPath   string `json:"privateKeyPath"`
+}
+
+// Unlock Wallet
+
+type UnlockWalletResult struct {
+	UnlockWallet struct {
+		Account struct {
+			Balance struct {
+				Total string `json:"total"`
+			} `json:"balance"`
+		} `json:"account"`
+	} `json:"unlockWallet"`
+}
+
+// Create Account
+
+type CreateWalletResult struct {
+	CreateAccount struct {
+		PublicKey string `json:"publicKey"`
+	} `json:"createAccount"`
+}
+
+// Send Payment
+
+type SendPaymentResult struct {
+	SendPayment struct {
+		Payment struct {
+			Id           string `json:"id"`
+			IsDelegation bool   `json:"isDelegation"`
+			Nonce        int    `json:"nonce"`
+			From         string `json:"from"`
+			To           string `json:"to"`
+			Amount       string `json:"amount"`
+			Fee          string `json:"fee"`
+			Memo         string `json:"memo"`
+		} `json:"payment"`
+	} `json:"sendPayment"`
+}
+
 type UniversalHttpResult struct {
 	DaemonStatusResult
 	DaemonVersionResult
+	GetWalletsResult
+	GetWalletResult
+	UnlockWalletResult
+	CreateWalletResult
+	SendPaymentResult
 }
 
-// New Block Subscription
+// Subscription Query
 
-type SubscribeData struct {
+type SubscribeDataQuery struct {
 	Type    string         `json:"type"`
 	Id      string         `json:"id"`
 	Payload SubscribeQuery `json:"payload"`
@@ -77,23 +141,26 @@ type SubscribeQuery struct {
 	Query string `json:"query"`
 }
 
+// Subscription Common
+
 type SubscriptionResponse struct {
-	NewBlockSubscriptionResponse
-	SyncUpdateSubscriptionResponse
+	BaseResponse
 }
 
-type SyncUpdateSubscriptionResponse struct {
+type BaseResponse struct {
+	Type    string `json:"type"`
+	Id      string `json:"id"`
+	Payload struct {
+		Data SubData `json:"data"`
+	} `json:"payload"`
 }
 
-type NewBlockSubscriptionResponse struct {
-	Type    string       `json:"type"`
-	Id      string       `json:"id"`
-	Payload NewBlockData `json:"payload"`
+type SubData struct {
+	NewBlock
+	SyncUpdate
 }
 
-type NewBlockData struct {
-	Data NewBlock `json:"data"`
-}
+// New Block Subscription
 
 type NewBlock struct {
 	Block InsideBlockObj `json:"newBlock"`
@@ -140,5 +207,9 @@ type BlockchainStateObj struct {
 }
 
 // Sync Update Subscription
+
+type SyncUpdate struct {
+	NewSyncUpdate string `json:"newSyncUpdate"`
+}
 
 // Block Confirmation Subscription

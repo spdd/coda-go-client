@@ -69,11 +69,27 @@ func NewClient(endpoint string, hub *Hub, eventsIt []string) *Client {
 }
 
 // Request HTTP request helper
-func (c *Client) makeHttpRequest(query string) (string, error) {
-	requestBody, err := json.Marshal(map[string]string{
+func (c *Client) makeHttpRequest(query string, variables interface{}) (string, error) {
+	payload, err := json.Marshal(map[string]string{
 		"query": query,
 	})
-	request, err := http.NewRequest("POST", c.Endpoint, bytes.NewBuffer(requestBody))
+
+	if variables != "" {
+		type Payload struct {
+			Query     string      `json:"query"`
+			Variables interface{} `json:"variables"`
+		}
+		p := Payload{
+			Query:     query,
+			Variables: variables,
+		}
+		payload, err = json.Marshal(p)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	//log.Println(bytes.NewBuffer(payload))
+	request, err := http.NewRequest("POST", c.Endpoint, bytes.NewBuffer(payload))
 	request.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		log.Fatalln(err)
@@ -91,103 +107,55 @@ func (c *Client) makeHttpRequest(query string) (string, error) {
 	return string(body), nil
 }
 
-// Coda API
-// GetDaemonStatus
-func (c *Client) GetDaemonStatusRepeat() {
-	c.getUniversalRepeat(types.DaemonStatusQuery)
-}
-
-func (c *Client) GetDaemonStatusCh() <-chan *types.UniversalHttpResult {
-	return c.getUniversalCh(types.DaemonStatusQuery)
-}
-
-func (c *Client) GetDaemonStatus() (*types.UniversalHttpResult, error) {
-	return c.getUniversal(types.DaemonStatusQuery)
-}
-
-// GetDaemonVersion
-func (c *Client) GetDaemonVersion() (*types.UniversalHttpResult, error) {
-	return c.getUniversal(types.DaemonVersionQuery)
-}
-
-func (c *Client) getUniversalCh(query string) <-chan *types.UniversalHttpResult {
-	ch := make(chan *types.UniversalHttpResult, 1)
-	go func() {
-		response, err := c.makeHttpRequest(query)
-		if err != nil {
+func getResponse(c *Client, query string, variables interface{}, ch chan *types.UniversalHttpResult) (*types.UniversalHttpResult, error) {
+	response, err := c.makeHttpRequest(query, variables)
+	if err != nil {
+		if ch != nil {
 			ch <- nil
 		}
-		var ds types.UniversalHttpResult
-		response = removeFromJsonString(response)
-		//log.Println("Result Universal2:", response)
-		r := bytes.NewReader([]byte(response))
-		err2 := json.NewDecoder(r).Decode(&ds)
-		if err2 != nil {
-			log.Fatalln(err2)
+		return nil, err
+	}
+	var ds types.UniversalHttpResult
+	response = removeFromJsonString(response)
+	//log.Println("Result Universal2:", response)
+	r := bytes.NewReader([]byte(response))
+	err2 := json.NewDecoder(r).Decode(&ds)
+	if err2 != nil {
+		if ch != nil {
 			ch <- nil
 		}
+		log.Println(err2)
+		return nil, err2
+	}
+	if ch != nil {
 		ch <- &ds
 		close(ch)
+	}
+	return &ds, nil
+}
+
+func (c *Client) getUniversalCh(query string, variables interface{}) <-chan *types.UniversalHttpResult {
+	ch := make(chan *types.UniversalHttpResult, 1)
+	go func() {
+		getResponse(c, query, variables, ch)
 	}()
 	return ch
 }
 
 // GraphQL http/s query
-func (c *Client) getUniversal(query string) (*types.UniversalHttpResult, error) {
-	response, err := c.makeHttpRequest(query)
-	if err != nil {
-		return nil, err
-	}
-	var ds types.UniversalHttpResult
-	response = removeFromJsonString(response)
-	//log.Println("Result Universal:", response)
-	r := bytes.NewReader([]byte(response))
-	err2 := json.NewDecoder(r).Decode(&ds)
-	if err2 != nil {
-		log.Fatalln(err2)
-		return nil, err2
-	}
-	return &ds, nil
+func (c *Client) getUniversal(query string, variables interface{}) (*types.UniversalHttpResult, error) {
+	return getResponse(c, query, variables, nil)
 }
 
-// Not tested
-func (c *Client) getUniversalRepeat(query string) {
-	for {
-		select {
-		default:
-			response, err := c.makeHttpRequest(query)
-			if err != nil {
-				log.Println(err)
-				c.hub.Status <- nil
-				return
-			}
-			var ds types.UniversalHttpResult
-			response = removeFromJsonString(response)
-			//log.Println("Result UniversalCh:", response)
-			r := bytes.NewReader([]byte(response))
-			err2 := json.NewDecoder(r).Decode(&ds)
-			if err2 != nil {
-				log.Fatalln(err2)
-				c.hub.Status <- nil
-			}
-			log.Printf("%s Sync Status: %s", c.Endpoint, ds.DaemonStatus.SyncStatus)
-
-			c.hub.Status <- &Status{Client: c, Status: &ds}
-			time.Sleep(60 * time.Second)
-		}
-	}
-}
-
-// Subscription API
 func (c *Client) subscribe(event *types.Event) {
 	if event == nil {
 		log.Println("Event is nil")
 		return
 	}
+	defer func() {
+		log.Println("Exit Subscribtion: ", event.Type)
+	}()
 	for {
-		defer func() {
-			log.Println("Exit Subscribtion: ", event.Type)
-		}()
 		select {
 		default:
 			event.Subscribed = true
@@ -200,21 +168,15 @@ func (c *Client) subscribe(event *types.Event) {
 			conn, err := websocket.Dial(url, "", origin)
 			if err != nil {
 				log.Println("dial:", err)
-				//log.Printf("Trying to connect to %s after %v seconds", url, 60)
-				//time.Sleep(60 * time.Second)
-				//continue
 			}
 
 			defer conn.Close()
 			log.Printf("Subscription Type: %s", event.Type)
-			d2 := types.SubscribeData{
+			d2 := types.SubscribeDataQuery{
 				Type:    "start",
 				Id:      "1",
 				Payload: types.SubscribeQuery{Query: event.Query},
 			}
-			//s2, _ := json.Marshal(d2)
-			//log.Println(string(s2))
-
 			// send message
 			err2 := websocket.JSON.Send(conn, d2)
 			if err2 != nil {
@@ -230,8 +192,7 @@ func (c *Client) subscribe(event *types.Event) {
 			}
 			conn.Close()
 			log.Println("Receive type:", m.Type)
-			//s3, _ := json.Marshal(m)
-			//log.Printf("recv: %s", string(s3))
+
 			responseData := &types.ResponseData{
 				Host: c.Endpoint,
 				Type: event.Type,
@@ -246,10 +207,77 @@ func (c *Client) subscribe(event *types.Event) {
 			time.Sleep(1 * time.Second)
 		case <-event.Unsubscribe:
 			log.Printf("%s Unsubscribed from %s", c.Endpoint, event.Type)
+			event.Unsubscribe <- true
 			return
 		}
 	}
 }
+
+// Coda API
+// GetDaemonStatus
+
+// get status concurrenly
+func (c *Client) GetDaemonStatusCh() <-chan *types.UniversalHttpResult {
+	return c.getUniversalCh(types.DaemonStatusQuery, "")
+}
+
+func (c *Client) GetDaemonStatus() (*types.UniversalHttpResult, error) {
+	return c.getUniversal(types.DaemonStatusQuery, "")
+}
+
+// GetDaemonVersion
+func (c *Client) GetDaemonVersion() (*types.UniversalHttpResult, error) {
+	return c.getUniversal(types.DaemonVersionQuery, "")
+}
+
+// Get Owned Wallets
+func (c *Client) GetWallets() (*types.UniversalHttpResult, error) {
+	return c.getUniversal(types.GetWalletsQuery, "")
+}
+
+// Get Wallet
+func (c *Client) GetWallet(pk string) (*types.UniversalHttpResult, error) {
+	type PublicKey struct {
+		Pk string `json:"publicKey"`
+	}
+	return c.getUniversal(types.GetWalletQuery, PublicKey{Pk: pk})
+}
+
+// Unlock wallet with password
+func (c *Client) UnlockWallet(pk string, password string) (*types.UniversalHttpResult, error) {
+	type UnlockWallet struct {
+		Pk       string `json:"publicKey"`
+		Password string `json:"password"`
+	}
+	return c.getUniversal(types.UnlockWalletQuery, UnlockWallet{Pk: pk, Password: password})
+}
+
+func (c *Client) CreateWallet(password string) (*types.UniversalHttpResult, error) {
+	type CreateWallet struct {
+		Password string `json:"password"`
+	}
+	return c.getUniversal(types.CreateWalletQuery, CreateWallet{Password: password})
+}
+
+func (c *Client) SendPayment(from, to string, amount, fee int, memo string) (*types.UniversalHttpResult, error) {
+	type SendPayment struct {
+		From   string `json:"from"`
+		To     string `json:"to"`
+		Amount int    `json:"amount"`
+		Fee    int    `json:"fee"`
+		Memo   string `json:"memo"`
+	}
+	return c.getUniversal(types.SendPaymentQuery,
+		SendPayment{
+			From:   from,
+			To:     to,
+			Amount: amount,
+			Fee:    fee,
+			Memo:   memo,
+		})
+}
+
+// Subscription API
 
 func (c *Client) SubscribeForEvent(event *types.Event) {
 	c.subscribe(event)

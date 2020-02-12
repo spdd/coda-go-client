@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	getSyncStatus()
 	getStatus()
 	getStatusAsync()
 }
@@ -41,6 +42,20 @@ func getStatusAsync() {
 		log.Println("CommitId Number: ", d.DaemonStatus.CommitId)
 		log.Println("")
 	}
+}
+
+func getSyncStatus() {
+	defer elapsed("Sync Status")()
+	client := coda.NewClient("http://192.168.100.100:3085/graphql", nil, nil)
+	d, err := client.GetSyncStatus()
+
+	time.Sleep(time.Second)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println("Sync Status: ", d.SyncStatus)
+	log.Println("")
 }
 
 func elapsed(what string) func() {

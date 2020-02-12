@@ -1,7 +1,8 @@
 package types
 
-// Daemon Status
-var DaemonStatusQuery = `
+var (
+	// Daemon Status
+	DaemonStatusQuery = `
 	query {
 		daemonStatus {
 		numAccounts
@@ -34,27 +35,27 @@ var DaemonStatusQuery = `
 	}
   `
 
-// Daemon Version
-var DaemonVersionQuery = `
-{
-	version
-}
-`
-
-// Get Wallets
-var GetWalletsQuery = `
-{
-	ownedWallets {
-	  publicKey
-	  balance {
-		total
-	  }
+	// Daemon Version
+	DaemonVersionQuery = `
+	{
+		version
 	}
-}
 `
 
-// GetWallet
-var GetWalletQuery = `
+	// Get Wallets
+	GetWalletsQuery = `
+	{
+		ownedWallets {
+		publicKey
+		balance {
+			total
+		}
+		}
+	}
+`
+
+	// GetWallet
+	GetWalletQuery = `
 	query($publicKey:PublicKey!){
 		wallet(publicKey:$publicKey) {
 		publicKey
@@ -72,7 +73,7 @@ var GetWalletQuery = `
 	}
 `
 
-var UnlockWalletQuery = `
+	UnlockWalletQuery = `
 	mutation ($publicKey: PublicKey!, $password: String!) {
 		unlockWallet(input: {publicKey: $publicKey, password: $password}) {
 		account {
@@ -84,7 +85,7 @@ var UnlockWalletQuery = `
 	}
 `
 
-var CreateWalletQuery = `
+	CreateWalletQuery = `
 	mutation ($password: String!) {
 		createAccount(input: {password: $password}) {
 		publicKey
@@ -92,7 +93,7 @@ var CreateWalletQuery = `
 	}
 `
 
-var SendPaymentQuery = `
+	SendPaymentQuery = `
 	mutation($from:PublicKey!, $to:PublicKey!, $amount:UInt64!, $fee:UInt64!, $memo:String){
 		sendPayment(input: {
 		from:$from,
@@ -115,9 +116,53 @@ var SendPaymentQuery = `
 	}
 `
 
-// New Block Subscription
+	GetPooledPaymentsQuery = `
+	query ($publicKey:String!){
+		pooledUserCommands(publicKey:$publicKey) {
+		id,
+		isDelegation,
+		nonce,
+		from,
+		to,
+		amount,
+		fee,
+		memo
+		}
+	}
+`
 
-var NewBlockSubscriptionQuery = `
+	GetTransactionStatusQuery = `
+	query($paymentId:ID!){
+		transactionStatus(payment:$paymentId)
+	}
+`
+
+	SetSnarkWorkerQuery = `
+	mutation($worker_pk:PublicKey!, $fee:UInt64!){
+	setSnarkWorker(input: {publicKey:$worker_pk}) {
+		lastSnarkWorker
+	}
+	setSnarkWorkFee(input: {fee:$fee})
+	}
+`
+
+	GetCurrentSnarkWorkerQuery = `
+	{
+		currentSnarkWorker{
+		key
+		fee
+		}
+	}
+	`
+	GetSyncStatusQuery = `
+	{
+		syncStatus
+	}
+	`
+
+	// New Block Subscription
+
+	NewBlockSubscriptionQuery = `
 	subscription(){
 		newBlock(){
 		creator
@@ -151,13 +196,13 @@ var NewBlockSubscriptionQuery = `
 	}
 `
 
-var SyncUpdateSubscriptionQuery = `
+	SyncUpdateSubscriptionQuery = `
 	subscription{
 		newSyncUpdate 
 	}
 `
 
-var BlockConfirmationSubscriptionQuery = `
+	BlockConfirmationSubscriptionQuery = `
 	subscription{
 		blockConfirmation {
 		stateHash
@@ -165,3 +210,4 @@ var BlockConfirmationSubscriptionQuery = `
 		}
 	}
 `
+)

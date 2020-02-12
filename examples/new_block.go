@@ -6,10 +6,14 @@ import (
 	coda "github.com/spdd/coda-go-client/client"
 )
 
-func main1() {
-
+func main() {
 	hub := coda.NewHub()
 	client := coda.NewClient("http://192.168.100.100:3085/graphql", hub, nil)
+
+	newBlock(client, hub)
+}
+
+func newBlock(client *coda.Client, hub *coda.Hub) {
 
 	go client.SubscribeForNewBlocks()
 
@@ -26,10 +30,7 @@ func main1() {
 	}
 }
 
-func main() {
-
-	hub := coda.NewHub()
-	client := coda.NewClient("http://192.168.100.100:3085/graphql", hub, nil)
+func syncUpdate(client *coda.Client, hub *coda.Hub) {
 
 	go client.SubscribeForSyncUpdates()
 

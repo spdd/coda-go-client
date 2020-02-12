@@ -230,6 +230,11 @@ func (c *Client) GetDaemonVersion() (*types.UniversalHttpResult, error) {
 	return c.getUniversal(types.DaemonVersionQuery, "")
 }
 
+// Get Sync Status
+func (c *Client) GetSyncStatus() (*types.UniversalHttpResult, error) {
+	return c.getUniversal(types.GetSyncStatusQuery, "")
+}
+
 // Get Owned Wallets
 func (c *Client) GetWallets() (*types.UniversalHttpResult, error) {
 	return c.getUniversal(types.GetWalletsQuery, "")
@@ -275,6 +280,33 @@ func (c *Client) SendPayment(from, to string, amount, fee int, memo string) (*ty
 			Fee:    fee,
 			Memo:   memo,
 		})
+}
+
+func (c *Client) GetPooledPayments(pk string) (*types.UniversalHttpResult, error) {
+	type PublicKey struct {
+		Pk string `json:"publicKey"`
+	}
+	return c.getUniversal(types.GetPooledPaymentsQuery, PublicKey{Pk: pk})
+}
+
+func (c *Client) GetTransactionStatus(paymentId string) (*types.UniversalHttpResult, error) {
+	type PaymentId struct {
+		PaymentId string `json:"paymentId"`
+	}
+	return c.getUniversal(types.GetTransactionStatusQuery, PaymentId{PaymentId: paymentId})
+}
+
+// Snark worker
+func (c *Client) SetSnarkWorker(workerPk, fee string) (*types.UniversalHttpResult, error) {
+	type SnarkWorker struct {
+		WorkerPK string `json:"worker_pk"`
+		Fee      string `json:"fee"`
+	}
+	return c.getUniversal(types.SetSnarkWorkerQuery, SnarkWorker{WorkerPK: workerPk, Fee: fee})
+}
+
+func (c *Client) GetCurrentSnarkWorker() (*types.UniversalHttpResult, error) {
+	return c.getUniversal(types.GetCurrentSnarkWorkerQuery, "")
 }
 
 // Subscription API

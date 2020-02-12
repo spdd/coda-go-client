@@ -18,12 +18,12 @@ Simple API Client for [Coda](https://codaprotocol.com/) GraphQL API written in G
 |        Unlock wallet                  |  :ok:   |   :ok:   |         UnlockWallet(pk, ps)   |
 |        Create wallet                  |  :ok:   |   :ok:   |         CreateWallet(ps)       |
 |        Send payment                   |  :ok:   |   :ok:   |         SendPayment(r,s,a,f,m) |
-|        get_pooled_payments            |  :ok:   |   :ok:   |         -                      |
-|        get_transaction_status         |  :ok:   |   :ok:   |         -                      |
-|        set_current_snark_worker       |  :ok:   |   :ok:   |         -                      |
-|        get_current_snark_worker       |  :ok:   |   :ok:   |         -                      |
-|        get_sync_status                |  :ok:   |   :ok:   |         -                      |
-|        get_blocks                     |  :ok:   |   :ok:   |         -                      |
+|        Get pooled payments            |  :ok:   |   :ok:   |         GetPooledPayments(pk)  |
+|        Get transaction status         |  :ok:   |   :ok:   |    GetTransactionStatus(pID)   |
+|        Set snark worker               |  :ok:   |   :ok:   |    SetSnarkWorker(workerPk,fee)|
+|        Get current snark worker       |  :ok:   |   :ok:   |    GetCurrentSnarkWorker()     |
+|        Get sync status                |  :ok:   |   :ok:   |    GetSyncStatus()             |
+|        Get blocks                     |  :x:    |   :x:    |         -                      |
 |      Subscription for new blocks      |  :ok:   |   :ok:   |      SubscribeForNewBlocks     |
 | Subscription for Network Sync Updates |  :ok:   |   :ok:   |     SubscribeForSyncUpdates    |
 | Subscription for Block Confirmations  |  :x:    |   :x:    | SubscribeForBlockConfirmations |

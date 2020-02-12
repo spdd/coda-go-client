@@ -106,17 +106,43 @@ type CreateWalletResult struct {
 
 type SendPaymentResult struct {
 	SendPayment struct {
-		Payment struct {
-			Id           string `json:"id"`
-			IsDelegation bool   `json:"isDelegation"`
-			Nonce        int    `json:"nonce"`
-			From         string `json:"from"`
-			To           string `json:"to"`
-			Amount       string `json:"amount"`
-			Fee          string `json:"fee"`
-			Memo         string `json:"memo"`
-		} `json:"payment"`
+		Payment Payment `json:"payment"`
 	} `json:"sendPayment"`
+}
+
+type Payment struct {
+	Id           string `json:"id"`
+	IsDelegation bool   `json:"isDelegation"`
+	Nonce        int    `json:"nonce"`
+	From         string `json:"from"`
+	To           string `json:"to"`
+	Amount       string `json:"amount"`
+	Fee          string `json:"fee"`
+	Memo         string `json:"memo"`
+}
+
+// Pooled Payment
+type GetPooledPaymentResult struct {
+	PooledPayments []Payment `json:"pooledUserCommands"`
+}
+
+type GetTransactionStatusResult struct {
+	TransactionStatus string `json:"transactionStatus"`
+}
+
+// Snark Worker
+type SetSnarkWorkerResult struct {
+	SetSnarkWorker struct {
+		LastSnarkWorker interface{} `json:"lastSnarkWorker"`
+	} `json:"setSnarkWorker"`
+	SetSnarkWorkFee struct{} `json:"setSnarkWorkFee"`
+}
+
+type GetCurrentSnarkWorkerResult struct {
+	CurrentSnarkWorker struct {
+		Key string `json:"key"`
+		Fee string `json:"fee"`
+	} `json:"currentSnarkWorker"`
 }
 
 type UniversalHttpResult struct {
@@ -127,6 +153,11 @@ type UniversalHttpResult struct {
 	UnlockWalletResult
 	CreateWalletResult
 	SendPaymentResult
+	GetPooledPaymentResult
+	GetTransactionStatusResult
+	SetSnarkWorkerResult
+	GetCurrentSnarkWorkerResult
+	SyncStatus string `json:"syncStatus"`
 }
 
 // Subscription Query
@@ -163,47 +194,35 @@ type SubData struct {
 // New Block Subscription
 
 type NewBlock struct {
-	Block InsideBlockObj `json:"newBlock"`
-}
-
-type InsideBlockObj struct {
-	Creator       string           `json:"creator"`
-	StateHash     string           `json:"stateHash"`
-	ProtocolState ProtocolStateObj `json:"protocolState"`
-	Transactions  TransactionsObj  `json:"transactions"`
-}
-
-type ProtocolStateObj struct {
-	PreviousStateHash string             `json:"previousStateHash"`
-	BlockchainState   BlockchainStateObj `json:"blockchainState"`
-}
-
-type TransactionsObj struct {
-	UserCommands []UserCommandsObj `json:"userCommands"`
-	FeeTransfer  []FeeTransferObj  `json:"feeTransfer"`
-	Coinbase     string            `json:"coinbase"`
-}
-
-type UserCommandsObj struct {
-	Id           string `json:"id"`
-	IsDelegation bool   `json:"isDelegation"`
-	Nonce        int    `json:"nonce"`
-	From         string `json:"from"`
-	To           string `json:"to"`
-	Amount       string `json:"amount"`
-	Fee          string `json:"fee"`
-	Memo         string `json:"memo"`
-}
-
-type FeeTransferObj struct {
-	Recipient string `json:"recipient"`
-	Fee       string `json:"fee"`
-}
-
-type BlockchainStateObj struct {
-	Date              string `json:"date"`
-	SnarkedLedgerHash string `json:"snarkedLedgerHash"`
-	StagedLedgerHash  string `json:"stagedLedgerHash"`
+	Block struct {
+		Creator       string `json:"creator"`
+		StateHash     string `json:"stateHash"`
+		ProtocolState struct {
+			PreviousStateHash string `json:"previousStateHash"`
+			BlockchainState   struct {
+				Date              string `json:"date"`
+				SnarkedLedgerHash string `json:"snarkedLedgerHash"`
+				StagedLedgerHash  string `json:"stagedLedgerHash"`
+			} `json:"blockchainState"`
+		} `json:"protocolState"`
+		Transactions struct {
+			UserCommands []struct {
+				Id           string `json:"id"`
+				IsDelegation bool   `json:"isDelegation"`
+				Nonce        int    `json:"nonce"`
+				From         string `json:"from"`
+				To           string `json:"to"`
+				Amount       string `json:"amount"`
+				Fee          string `json:"fee"`
+				Memo         string `json:"memo"`
+			} `json:"userCommands"`
+			FeeTransfer []struct {
+				Recipient string `json:"recipient"`
+				Fee       string `json:"fee"`
+			} `json:"feeTransfer"`
+			Coinbase string `json:"coinbase"`
+		} `json:"transactions"`
+	} `json:"newBlock"`
 }
 
 // Sync Update Subscription

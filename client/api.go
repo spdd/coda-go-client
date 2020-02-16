@@ -2,6 +2,7 @@ package coda
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -107,7 +108,7 @@ func (c *Client) makeHttpRequest(query string, variables interface{}) (string, e
 	return string(body), nil
 }
 
-func getResponse(c *Client, query string, variables interface{}, ch chan *types.UniversalHttpResult) (*types.UniversalHttpResult, error) {
+func getResponse(c *Client, query string, variables interface{}, ch chan *types.AbstractHttpResult) (*types.AbstractHttpResult, error) {
 	response, err := c.makeHttpRequest(query, variables)
 	if err != nil {
 		if ch != nil {
@@ -115,9 +116,9 @@ func getResponse(c *Client, query string, variables interface{}, ch chan *types.
 		}
 		return nil, err
 	}
-	var ds types.UniversalHttpResult
+	var ds types.AbstractHttpResult
 	response = removeFromJsonString(response)
-	//log.Println("Result Universal2:", response)
+	//log.Println("Result Abstract2:", response)
 	r := bytes.NewReader([]byte(response))
 	err2 := json.NewDecoder(r).Decode(&ds)
 	if err2 != nil {
@@ -134,8 +135,8 @@ func getResponse(c *Client, query string, variables interface{}, ch chan *types.
 	return &ds, nil
 }
 
-func (c *Client) getUniversalCh(query string, variables interface{}) <-chan *types.UniversalHttpResult {
-	ch := make(chan *types.UniversalHttpResult, 1)
+func (c *Client) getUniversalCh(query string, variables interface{}) <-chan *types.AbstractHttpResult {
+	ch := make(chan *types.AbstractHttpResult, 1)
 	go func() {
 		getResponse(c, query, variables, ch)
 	}()
@@ -143,11 +144,11 @@ func (c *Client) getUniversalCh(query string, variables interface{}) <-chan *typ
 }
 
 // GraphQL http/s query
-func (c *Client) getUniversal(query string, variables interface{}) (*types.UniversalHttpResult, error) {
+func (c *Client) getUniversal(query string, variables interface{}) (*types.AbstractHttpResult, error) {
 	return getResponse(c, query, variables, nil)
 }
 
-func (c *Client) subscribe(event *types.Event) {
+func (c *Client) subscribe(ctx context.Context, event *types.Event) {
 	if event == nil {
 		log.Println("Event is nil")
 		return
@@ -170,7 +171,6 @@ func (c *Client) subscribe(event *types.Event) {
 				log.Println("dial:", err)
 			}
 
-			defer conn.Close()
 			log.Printf("Subscription Type: %s", event.Type)
 			d2 := types.SubscribeDataQuery{
 				Type:    "start",
@@ -206,8 +206,10 @@ func (c *Client) subscribe(event *types.Event) {
 			}
 			time.Sleep(1 * time.Second)
 		case <-event.Unsubscribe:
-			log.Printf("%s Unsubscribed from %s", c.Endpoint, event.Type)
+			log.Printf("%s unsubscribed from %s", c.Endpoint, event.Type)
 			event.Unsubscribe <- true
+			return
+		case <-ctx.Done():
 			return
 		}
 	}
@@ -217,31 +219,31 @@ func (c *Client) subscribe(event *types.Event) {
 // GetDaemonStatus
 
 // get status concurrenly
-func (c *Client) GetDaemonStatusCh() <-chan *types.UniversalHttpResult {
+func (c *Client) GetDaemonStatusCh() <-chan *types.AbstractHttpResult {
 	return c.getUniversalCh(types.DaemonStatusQuery, "")
 }
 
-func (c *Client) GetDaemonStatus() (*types.UniversalHttpResult, error) {
+func (c *Client) GetDaemonStatus() (*types.AbstractHttpResult, error) {
 	return c.getUniversal(types.DaemonStatusQuery, "")
 }
 
 // GetDaemonVersion
-func (c *Client) GetDaemonVersion() (*types.UniversalHttpResult, error) {
+func (c *Client) GetDaemonVersion() (*types.AbstractHttpResult, error) {
 	return c.getUniversal(types.DaemonVersionQuery, "")
 }
 
 // Get Sync Status
-func (c *Client) GetSyncStatus() (*types.UniversalHttpResult, error) {
+func (c *Client) GetSyncStatus() (*types.AbstractHttpResult, error) {
 	return c.getUniversal(types.GetSyncStatusQuery, "")
 }
 
 // Get Owned Wallets
-func (c *Client) GetWallets() (*types.UniversalHttpResult, error) {
+func (c *Client) GetWallets() (*types.AbstractHttpResult, error) {
 	return c.getUniversal(types.GetWalletsQuery, "")
 }
 
 // Get Wallet
-func (c *Client) GetWallet(pk string) (*types.UniversalHttpResult, error) {
+func (c *Client) GetWallet(pk string) (*types.AbstractHttpResult, error) {
 	type PublicKey struct {
 		Pk string `json:"publicKey"`
 	}
@@ -249,7 +251,7 @@ func (c *Client) GetWallet(pk string) (*types.UniversalHttpResult, error) {
 }
 
 // Unlock wallet with password
-func (c *Client) UnlockWallet(pk string, password string) (*types.UniversalHttpResult, error) {
+func (c *Client) UnlockWallet(pk string, password string) (*types.AbstractHttpResult, error) {
 	type UnlockWallet struct {
 		Pk       string `json:"publicKey"`
 		Password string `json:"password"`
@@ -257,14 +259,14 @@ func (c *Client) UnlockWallet(pk string, password string) (*types.UniversalHttpR
 	return c.getUniversal(types.UnlockWalletQuery, UnlockWallet{Pk: pk, Password: password})
 }
 
-func (c *Client) CreateWallet(password string) (*types.UniversalHttpResult, error) {
+func (c *Client) CreateWallet(password string) (*types.AbstractHttpResult, error) {
 	type CreateWallet struct {
 		Password string `json:"password"`
 	}
 	return c.getUniversal(types.CreateWalletQuery, CreateWallet{Password: password})
 }
 
-func (c *Client) SendPayment(from, to string, amount, fee int, memo string) (*types.UniversalHttpResult, error) {
+func (c *Client) SendPayment(from, to string, amount, fee int, memo string) (*types.AbstractHttpResult, error) {
 	type SendPayment struct {
 		From   string `json:"from"`
 		To     string `json:"to"`
@@ -282,14 +284,14 @@ func (c *Client) SendPayment(from, to string, amount, fee int, memo string) (*ty
 		})
 }
 
-func (c *Client) GetPooledPayments(pk string) (*types.UniversalHttpResult, error) {
+func (c *Client) GetPooledPayments(pk string) (*types.AbstractHttpResult, error) {
 	type PublicKey struct {
 		Pk string `json:"publicKey"`
 	}
 	return c.getUniversal(types.GetPooledPaymentsQuery, PublicKey{Pk: pk})
 }
 
-func (c *Client) GetTransactionStatus(paymentId string) (*types.UniversalHttpResult, error) {
+func (c *Client) GetTransactionStatus(paymentId string) (*types.AbstractHttpResult, error) {
 	type PaymentId struct {
 		PaymentId string `json:"paymentId"`
 	}
@@ -297,7 +299,7 @@ func (c *Client) GetTransactionStatus(paymentId string) (*types.UniversalHttpRes
 }
 
 // Snark worker
-func (c *Client) SetSnarkWorker(workerPk, fee string) (*types.UniversalHttpResult, error) {
+func (c *Client) SetSnarkWorker(workerPk, fee string) (*types.AbstractHttpResult, error) {
 	type SnarkWorker struct {
 		WorkerPK string `json:"worker_pk"`
 		Fee      string `json:"fee"`
@@ -305,24 +307,24 @@ func (c *Client) SetSnarkWorker(workerPk, fee string) (*types.UniversalHttpResul
 	return c.getUniversal(types.SetSnarkWorkerQuery, SnarkWorker{WorkerPK: workerPk, Fee: fee})
 }
 
-func (c *Client) GetCurrentSnarkWorker() (*types.UniversalHttpResult, error) {
+func (c *Client) GetCurrentSnarkWorker() (*types.AbstractHttpResult, error) {
 	return c.getUniversal(types.GetCurrentSnarkWorkerQuery, "")
 }
 
 // Subscription API
 
-func (c *Client) SubscribeForEvent(event *types.Event) {
-	c.subscribe(event)
+func (c *Client) SubscribeForEvent(ctx context.Context, event *types.Event) {
+	c.subscribe(ctx, event)
 }
 
-func (c *Client) SubscribeForNewBlocks() {
-	c.subscribe(c.getEvent("NewBlock"))
+func (c *Client) SubscribeForNewBlocks(ctx context.Context) {
+	c.subscribe(ctx, c.getEvent("NewBlock"))
 }
 
-func (c *Client) SubscribeForSyncUpdates() {
-	c.subscribe(c.getEvent("SyncUpdate"))
+func (c *Client) SubscribeForSyncUpdates(ctx context.Context) {
+	c.subscribe(ctx, c.getEvent("SyncUpdate"))
 }
 
-func (c *Client) SubscribeForBlockConfirmations() {
-	c.subscribe(c.getEvent("BlockConfirmation"))
+func (c *Client) SubscribeForBlockConfirmations(ctx context.Context) {
+	c.subscribe(ctx, c.getEvent("BlockConfirmation"))
 }

@@ -1,20 +1,29 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	coda "github.com/spdd/coda-go-client/client"
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
 
 	hub := coda.NewHub()
 	client1 := coda.NewClient("http://192.168.100.100:3085/graphql", hub, nil)
 	client2 := coda.NewClient("http://graphql.o1test.net/graphql", hub, nil)
 
-	go client1.SubscribeForNewBlocks()
-	go client1.SubscribeForSyncUpdates()
-	go client2.SubscribeForNewBlocks()
+	go client1.SubscribeForNewBlocks(ctx)
+	go client1.SubscribeForSyncUpdates(ctx)
+	go client2.SubscribeForNewBlocks(ctx)
 
 	blockCount := 0
 	for {
@@ -48,6 +57,10 @@ func main() {
 					client1.SubscriptionEvents["SyncUpdate"].Unsubscribe <- true
 				}
 			}
+		case <-sigc:
+			cancel()
+			log.Println("System kill")
+			os.Exit(0)
 		}
 	}
 }

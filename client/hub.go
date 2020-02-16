@@ -1,6 +1,7 @@
 package coda
 
 import (
+	"context"
 	"log"
 
 	"github.com/spdd/coda-go-client/client/types"
@@ -8,7 +9,7 @@ import (
 
 type Status struct {
 	Client *Client
-	Status *types.UniversalHttpResult
+	Status *types.AbstractHttpResult
 }
 
 type Hub struct {
@@ -42,7 +43,7 @@ func NewHub() *Hub {
 	}
 }
 
-func (h *Hub) Run() {
+func (h *Hub) Run(ctx context.Context) {
 	for {
 		select {
 		case client := <-h.Subscribe:
@@ -75,7 +76,7 @@ func (h *Hub) Run() {
 						if event.Subscribed {
 							log.Printf("You %s already subscribed for %s", client.Endpoint, event.Type)
 						} else {
-							go client.SubscribeForEvent(event)
+							go client.SubscribeForEvent(ctx, event)
 						}
 
 						//time.Sleep(10 * time.Second)

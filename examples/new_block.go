@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	coda "github.com/spdd/coda-go-client/client"
 )
@@ -14,8 +18,13 @@ func main() {
 }
 
 func newBlock(client *coda.Client, hub *coda.Hub) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	go client.SubscribeForNewBlocks()
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
+
+	go client.SubscribeForNewBlocks(ctx)
 
 	for {
 		select {
@@ -26,13 +35,19 @@ func newBlock(client *coda.Client, hub *coda.Hub) {
 			client.SubscriptionEvents["NewBlock"].Unsubscribe <- true
 			log.Printf("Unsubscribed successfully %v", <-client.SubscriptionEvents["NewBlock"].Unsubscribe)
 			return
+		case <-sigc:
+			cancel()
+			log.Println("System kill")
+			os.Exit(0)
 		}
 	}
 }
 
 func syncUpdate(client *coda.Client, hub *coda.Hub) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	go client.SubscribeForSyncUpdates()
+	go client.SubscribeForSyncUpdates(ctx)
 
 	for {
 		select {

@@ -145,7 +145,7 @@ type GetCurrentSnarkWorkerResult struct {
 	} `json:"currentSnarkWorker"`
 }
 
-type UniversalHttpResult struct {
+type AbstractHttpResult struct {
 	DaemonStatusResult
 	DaemonVersionResult
 	GetWalletsResult

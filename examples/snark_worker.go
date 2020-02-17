@@ -13,12 +13,16 @@ const (
 
 func main() {
 	client := coda.NewClient("http://192.168.100.100:3085/graphql", nil, nil)
+	// enable worker
 	setSnarkWorker(client, pk, "1")
+	// disable worker
+	//setSnarkWorker(client, nil, "1")
+
 	//setSnarkWorker(client, pk2, "1")
-	GetCurrentSnarkWorker(client)
+	//GetCurrentSnarkWorker(client)
 }
 
-func setSnarkWorker(client *coda.Client, pk, fee string) {
+func setSnarkWorker(client *coda.Client, pk interface{}, fee string) {
 	r, err := client.SetSnarkWorker(pk, fee)
 	if err != nil {
 		log.Fatalln(err)

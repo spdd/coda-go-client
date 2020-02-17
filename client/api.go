@@ -66,7 +66,23 @@ func NewClient(endpoint string, hub *Hub, eventsIt []string) *Client {
 		SubscriptionEvents: subEvents,
 		Endpoint:           endpoint,
 		httpClient:         httpClient,
-		hub:                hub}
+		hub:                hub,
+	}
+}
+
+// NewClient with http client
+func NewClientWith(client *http.Client, endpoint string, hub *Hub, eventsIt []string) *Client {
+	subEvents := make(map[string]*types.Event)
+	for _, item := range eventsIt {
+		event := createEvent(item)
+		subEvents[item] = event
+	}
+	return &Client{
+		SubscriptionEvents: subEvents,
+		Endpoint:           endpoint,
+		httpClient:         client,
+		hub:                hub,
+	}
 }
 
 // Request HTTP request helper
@@ -169,6 +185,7 @@ func (c *Client) subscribe(ctx context.Context, event *types.Event) {
 			conn, err := websocket.Dial(url, "", origin)
 			if err != nil {
 				log.Println("dial:", err)
+				return
 			}
 
 			log.Printf("Subscription Type: %s", event.Type)

@@ -15,7 +15,7 @@ const (
 
 func main() {
 	client := coda.NewClient("http://192.168.100.100:3085/graphql", nil, nil)
-	//getWallets(client)
+	getWallets(client)
 	//getWallet(client, pk)
 	//unlockWallet(client, pk)
 	//createWallet(client, "")
@@ -25,8 +25,8 @@ func main() {
 	//for _, paymentId := range paymentIds {
 	//	getTransactionStatus(client, paymentId)
 	//}
-	getTransactionStatus(client, pID1)
-	getTransactionStatus(client, pID2)
+	//getTransactionStatus(client, pID1)
+	//getTransactionStatus(client, pID2)
 }
 
 func getWallets(client *coda.Client) {

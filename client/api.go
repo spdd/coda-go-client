@@ -134,7 +134,7 @@ func getResponse(c *Client, query string, variables interface{}, ch chan *types.
 	}
 	var ds types.AbstractHttpResult
 	response = removeFromJsonString(response)
-	//log.Println("Result Abstract2:", response)
+	log.Println("Result Abstract2:", response)
 	r := bytes.NewReader([]byte(response))
 	err2 := json.NewDecoder(r).Decode(&ds)
 	if err2 != nil {
@@ -316,10 +316,11 @@ func (c *Client) GetTransactionStatus(paymentId string) (*types.AbstractHttpResu
 }
 
 // Snark worker
-func (c *Client) SetSnarkWorker(workerPk, fee string) (*types.AbstractHttpResult, error) {
+// To disable snark worker workerPk  should be nil
+func (c *Client) SetSnarkWorker(workerPk interface{}, fee string) (*types.AbstractHttpResult, error) {
 	type SnarkWorker struct {
-		WorkerPK string `json:"worker_pk"`
-		Fee      string `json:"fee"`
+		WorkerPK interface{} `json:"worker_pk"`
+		Fee      string      `json:"fee"`
 	}
 	return c.getUniversal(types.SetSnarkWorkerQuery, SnarkWorker{WorkerPK: workerPk, Fee: fee})
 }

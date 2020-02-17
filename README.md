@@ -5,6 +5,14 @@ Simple API Client for [Coda](https://codaprotocol.com/) GraphQL API written in G
     <img src="go.png" alt="gocoda" height="200" />
 </p>
 
+## Requirements
+
+[Go](http://golang.org) 1.11 or newer.
+
+# Installation 
+
+`go get -u github.com/spdd/coda-go-client`
+
 ## Available GraphQL API
 
 [Refer official API](https://codaprotocol.com/docs/developers/graphql-api)
@@ -27,7 +35,3 @@ Simple API Client for [Coda](https://codaprotocol.com/) GraphQL API written in G
 |      Subscription for new blocks      |  :ok:   |   :ok:   |      SubscribeForNewBlocks     |
 | Subscription for Network Sync Updates |  :ok:   |   :ok:   |     SubscribeForSyncUpdates    |
 | Subscription for Block Confirmations  |  :x:    |   :x:    | SubscribeForBlockConfirmations |
-
-# Installation 
-
-`go get -u github.com/spdd/coda-go-client`

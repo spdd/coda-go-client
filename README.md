@@ -2,7 +2,7 @@
 Simple API Client for [Coda](https://codaprotocol.com/) GraphQL API written in Go
 
 <p align="center">
-    <img src="go.png" alt="gocoda" height="200" /><img src="https://cdn.codaprotocol.com/v4/static/img/coda-logo.png" alt="coda" height="200" />
+    <img src="go.png" alt="gocoda" height="200" />
 </p>
 
 ## Requirements

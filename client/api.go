@@ -134,7 +134,7 @@ func getResponse(c *Client, query string, variables interface{}, ch chan *types.
 	}
 	var ds types.AbstractHttpResult
 	response = removeFromJsonString(response)
-	log.Println("Result Abstract2:", response)
+	//log.Println("Result Abstract2:", response)
 	r := bytes.NewReader([]byte(response))
 	err2 := json.NewDecoder(r).Decode(&ds)
 	if err2 != nil {
